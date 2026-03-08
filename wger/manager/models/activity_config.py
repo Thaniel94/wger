@@ -14,36 +14,21 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Local
-from .abstract_config import AbstractChangeConfig
-from .day import Day
-from .label import Label
-from .log import WorkoutLog
-from .repetitions_config import (
-    MaxRepetitionsConfig,
-    RepetitionsConfig,
-)
-from .rest_config import (
-    MaxRestConfig,
-    RestConfig,
-)
-from .rir_config import (
-    MaxRiRConfig,
-    RiRConfig,
-)
-from .routine import Routine
-from .session import WorkoutSession
-from .sets_config import (
-    MaxSetsConfig,
-    SetsConfig,
-)
-from .slot import Slot
-from .slot_entry import SlotEntry
-from .weight_config import (
-    MaxWeightConfig,
-    WeightConfig,
-)
-from .activity_config import (
-    MaxActivityConfig,
-    ActivityConfig,
-)
+# wger
+from wger.manager.models import AbstractChangeConfig
+
+
+class ActivityConfig(AbstractChangeConfig):
+    """
+    Configuration model for the activity for a workout set
+    """
+
+    pass
+
+
+class MaxActivityConfig(AbstractChangeConfig):
+    """
+    Configuration model for the upper limit of the activity for a workout set
+    """
+
+    pass

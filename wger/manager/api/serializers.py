@@ -35,6 +35,8 @@ from wger.manager.models import (
     Slot,
     SlotEntry,
     WeightConfig,
+    ActivityConfig,
+    MaxActivityConfig,
     WorkoutLog,
     WorkoutSession,
 )
@@ -109,6 +111,26 @@ class MaxWeightConfigSerializer(BaseConfigSerializer):
 
     class Meta:
         model = MaxWeightConfig
+        fields = BASE_CONFIG_FIELDS
+
+
+class ActivityConfigSerializer(BaseConfigSerializer):
+    """
+    Activity Config serializer
+    """
+
+    class Meta:
+        model = ActivityConfig
+        fields = BASE_CONFIG_FIELDS
+
+
+class MaxActivityConfigSerializer(BaseConfigSerializer):
+    """
+    Max Activity Config serializer
+    """
+
+    class Meta:
+        model = MaxActivityConfig
         fields = BASE_CONFIG_FIELDS
 
 

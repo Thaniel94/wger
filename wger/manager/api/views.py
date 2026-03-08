@@ -41,6 +41,7 @@ from wger.manager.api.serializers import (
     MaxRiRConfigSerializer,
     MaxSetNrConfigSerializer,
     MaxWeightConfigSerializer,
+    MaxActivityConfigSerializer,
     RepetitionsConfigSerializer,
     RestConfigSerializer,
     RiRConfigSerializer,
@@ -50,6 +51,7 @@ from wger.manager.api.serializers import (
     SlotEntrySerializer,
     SlotSerializer,
     WeightConfigSerializer,
+    ActivityConfigSerializer,
     WorkoutDayDataDisplayModeSerializer,
     WorkoutDayDataGymModeSerializer,
     WorkoutLogSerializer,
@@ -62,6 +64,7 @@ from wger.manager.models import (
     MaxRiRConfig,
     MaxSetsConfig,
     MaxWeightConfig,
+    MaxActivityConfig,
     RepetitionsConfig,
     RestConfig,
     RiRConfig,
@@ -70,6 +73,7 @@ from wger.manager.models import (
     Slot,
     SlotEntry,
     WeightConfig,
+    ActivityConfig,
     WorkoutLog,
     WorkoutSession,
 )
@@ -470,6 +474,46 @@ class MaxWeightConfigViewSet(AbstractConfigViewSet):
             return MaxWeightConfig.objects.none()
 
         return MaxWeightConfig.objects.filter(
+            slot_entry__slot__day__routine__user=self.request.user
+        )
+
+
+class ActivityConfigViewSet(AbstractConfigViewSet):
+    """
+    API endpoint for activity config objects
+    """
+
+    serializer_class = ActivityConfigSerializer
+    filterset_class = BaseConfigFilterSet
+
+    def get_queryset(self):
+        """
+        Only allow access to appropriate objects
+        """
+        # REST API generation
+        if getattr(self, 'swagger_fake_view', False):
+            return ActivityConfig.objects.none()
+
+        return ActivityConfig.objects.filter(slot_entry__slot__day__routine__user=self.request.user)
+
+
+class MaxActivityConfigViewSet(AbstractConfigViewSet):
+    """
+    API endpoint for max activity config objects
+    """
+
+    serializer_class = MaxActivityConfigSerializer
+    filterset_class = BaseConfigFilterSet
+
+    def get_queryset(self):
+        """
+        Only allow access to appropriate objects
+        """
+        # REST API generation
+        if getattr(self, 'swagger_fake_view', False):
+            return MaxActivityConfig.objects.none()
+
+        return MaxActivityConfig.objects.filter(
             slot_entry__slot__day__routine__user=self.request.user
         )
 

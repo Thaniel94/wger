@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'wger.software',
     'wger.utils',
     'wger.weight',
+    'wger.activity',
     'wger.gallery',
     'wger.measurements',
     'wger.trophies',

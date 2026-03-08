@@ -51,6 +51,7 @@ from wger.nutrition.api import views as nutrition_api_views
 from wger.trophies.api import views as trophies_api_views
 from wger.utils.generic_views import TextTemplateView
 from wger.weight.api import views as weight_api_views
+from wger.activity.api import views as activity_api_views
 
 
 #
@@ -99,6 +100,16 @@ router.register(
     r'max-weight-config',
     manager_api_views.MaxWeightConfigViewSet,
     basename='max-weight-config',
+)
+router.register(
+    r'activity-config',
+    manager_api_views.ActivityConfigViewSet,
+    basename='activity-config',
+)
+router.register(
+    r'max-activity-config',
+    manager_api_views.MaxActivityConfigViewSet,
+    basename='max-activity-config',
 )
 router.register(
     r'repetitions-config',
@@ -235,6 +246,9 @@ router.register(r'ingredient-image', nutrition_api_views.ImageViewSet, basename=
 # Weight app
 router.register(r'weightentry', weight_api_views.WeightEntryViewSet, basename='weightentry')
 
+# Activity app
+router.register(r'activityentry', activity_api_views.ActivityEntryViewSet, basename='activityentry')
+
 # Gallery app
 router.register(r'gallery', gallery_api_views.GalleryImageViewSet, basename='gallery')
 
@@ -274,6 +288,7 @@ urlpatterns = i18n_patterns(
     path('routine/', include(('wger.manager.urls', 'manager'), namespace='manager')),
     path('exercise/', include(('wger.exercises.urls', 'exercise'), namespace='exercise')),
     path('weight/', include(('wger.weight.urls', 'weight'), namespace='weight')),
+    path('activity/', include(('wger.activity.urls', 'activity'), namespace='activity')),
     path('nutrition/', include(('wger.nutrition.urls', 'nutrition'), namespace='nutrition')),
     path('software/', include(('wger.software.urls', 'software'), namespace='software')),
     path('config/', include(('wger.config.urls', 'config'), namespace='config')),

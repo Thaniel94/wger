@@ -276,3 +276,9 @@ STORAGES = {
         ),
     },
 }
+
+if (os.environ.get('POLAR_CLIENT_ID')):
+    POLAR_CLIENT_ID = os.environ.get('POLAR_CLIENT_ID')
+    
+if (os.environ.get('POLAR_CLIENT_SECRET')):
+    POLAR_CLIENT_SECRET = os.environ.get('POLAR_CLIENT_SECRET')

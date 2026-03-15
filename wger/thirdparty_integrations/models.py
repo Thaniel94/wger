@@ -25,66 +25,32 @@ from django.core.validators import (
 )
 from django.db import models
 
-# wger
-from wger.thirdparty_integrations.models import IntegrationSource
 
-class WeightEntry(models.Model):
+class IntegrationSource(models.Model):
     """
-    Model for a weight point
+    Model for each third party integration source
     """
 
-    date = models.DateTimeField(verbose_name='Date')
-    weight = models.DecimalField(
-        verbose_name='Weight',
-        max_digits=5,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal(30)), MaxValueValidator(Decimal(600))],
-    )
-
-    imported = models.BooleanField(
-        verbose_name='bImported',
-        default=False,
-        null=False
-    )
-    
-    source = models.ForeignKey(
-        IntegrationSource,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL
-    )
-
-    user = models.ForeignKey(
-        User,
-        verbose_name='User',
-        on_delete=models.CASCADE,
-    )
-    """
-    The user the weight entry belongs to.
-
-    NOTE: this field is neither marked as editable false nor is it excluded in
-    the form. This is done intentionally because otherwise it's *very* difficult
-    and ugly to validate the uniqueness of unique_together fields and one field
-    is excluded from the form. This does not pose any security risk because the
-    value from the form is ignored and the request's user always used.
-    """
+    name = models.CharField(max_length=100, unique=True, verbose_name='Name'),
+    display_name = models.CharField(max_length=100, unique=True, verbose_name='Display Name'),
+    priority = models.IntegerField(null=False, verbose_name='Priority')
 
     class Meta:
         """
         Metaclass to set some other properties
         """
 
-        verbose_name = 'Weight entry'
+        verbose_name = 'Integration source'
         ordering = [
-            'date',
+            'priority',
         ]
-        get_latest_by = 'date'
+        get_latest_by = 'priority'
 
     def __str__(self):
         """
         Return a more human-readable representation
         """
-        return '{0}: {1:.2f} kg'.format(self.date, self.weight)
+        return '{0} - {1}'.format(self.name, self.priority)
 
     def get_owner_object(self):
         """

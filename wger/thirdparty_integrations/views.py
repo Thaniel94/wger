@@ -40,8 +40,8 @@ logger = logging.getLogger(__name__)
 class HealthConnectImportView(FormPreview):
     @login_required
     def post(self, request):
-        from wger.thirdparty_integrations.models import import_health_data
+        from wger.thirdparty_integrations.services.health_connect import HealthConnectService
 
-        import_health_data(request.user, request.data)
+        HealthConnectService.import_health_connect_data(request.user, request.data)
 
         return Response({"status": "ok"})

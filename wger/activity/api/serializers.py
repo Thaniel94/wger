@@ -19,12 +19,13 @@
 from rest_framework import serializers
 
 # wger
-from wger.activity.models import ActivityEntry
+from wger.activity.models import EnergyBurnedEntry
+from wger.activity.models import StepsEntry
 
 
-class ActivityEntrySerializer(serializers.ModelSerializer):
+class EnergyBurnedEntrySerializer(serializers.ModelSerializer):
     """
-    Activity serializer
+    EnergyBurned serializer
     """
 
     user = serializers.PrimaryKeyRelatedField(
@@ -32,10 +33,30 @@ class ActivityEntrySerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = ActivityEntry
+        model = EnergyBurnedEntry
         fields = (
             'id',
             'date',
-            'activity',
+            'energy_burned',
             'user',
         )
+
+
+class StepsEntrySerializer(serializers.ModelSerializer):
+    """
+    Steps serializer
+    """
+
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True, default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = StepsEntry
+        fields = (
+            'id',
+            'date',
+            'steps',
+            'user',
+        )
+

@@ -25,26 +25,44 @@ from django.core.validators import (
 )
 from django.db import models
 
+# wger
+from wger.thirdparty_integrations.models import IntegrationSource
 
-class ActivityEntry(models.Model):
+
+class EnergyBurnedEntry(models.Model):
     """
-    Model for a activity point
+    Model for energy burned
     """
 
-    date = models.DateTimeField(verbose_name='Date')
-    activity = models.DecimalField(
-        verbose_name='Activity',
+    date = models.DateField(verbose_name='Date')
+
+    energy_burned = models.DecimalField(
+        verbose_name='Energy burned',
         max_digits=5,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal(30)), MaxValueValidator(Decimal(600))],
+        validators=[MinValueValidator(Decimal(500)), MaxValueValidator(Decimal(15000))],
     )
+
+    imported = models.BooleanField(
+        verbose_name='bImported',
+        default=False,
+        null=False
+    )
+    
+    source = models.ForeignKey(
+        IntegrationSource,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
     user = models.ForeignKey(
         User,
         verbose_name='User',
         on_delete=models.CASCADE,
     )
     """
-    The user the activity entry belongs to.
+    The user the energy burned entry belongs to.
 
     NOTE: this field is neither marked as editable false nor is it excluded in
     the form. This is done intentionally because otherwise it's *very* difficult
@@ -58,7 +76,7 @@ class ActivityEntry(models.Model):
         Metaclass to set some other properties
         """
 
-        verbose_name = 'Activity entry'
+        verbose_name = 'Energy burned entry'
         ordering = [
             'date',
         ]
@@ -68,7 +86,57 @@ class ActivityEntry(models.Model):
         """
         Return a more human-readable representation
         """
-        return '{0}: {1:.2f} kg'.format(self.date, self.activity)
+        return '{0}: {1:.2f} kcal'.format(self.date, self.energy_burned)
+
+    def get_owner_object(self):
+        """
+        Returns the object that has owner information
+        """
+        return self
+
+class StepsEntry(models.Model):
+    """
+    Model for a walked step
+    """
+
+    date = models.DateField(verbose_name='Date')
+
+    steps = models.IntegerField(
+        verbose_name='Steps',
+        validators=[MaxValueValidator(int(1000000))],
+    )
+    
+    user = models.ForeignKey(
+        User,
+        verbose_name='User',
+        on_delete=models.CASCADE,
+    )
+    """
+    The user the steps entry belongs to.
+
+    NOTE: this field is neither marked as editable false nor is it excluded in
+    the form. This is done intentionally because otherwise it's *very* difficult
+    and ugly to validate the uniqueness of unique_together fields and one field
+    is excluded from the form. This does not pose any security risk because the
+    value from the form is ignored and the request's user always used.
+    """
+
+    class Meta:
+        """
+        Metaclass to set some other properties
+        """
+
+        verbose_name = 'Steps entry'
+        ordering = [
+            'date',
+        ]
+        get_latest_by = 'date'
+
+    def __str__(self):
+        """
+        Return a more human-readable representation
+        """
+        return '{0} steps'.format(self.steps)
 
     def get_owner_object(self):
         """

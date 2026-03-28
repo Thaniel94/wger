@@ -30,7 +30,10 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 # wger
+from wger.thirdparty_integrations.models import IntegrationSource, UserIntegrationSource
 from wger.weight.models import WeightEntry
+from wger.activity.models import StepsEntry
+from wger.activity.models import EnergyBurnedEntry
 
 
 logger = logging.getLogger(__name__)
@@ -40,15 +43,85 @@ HEALTH_CONNECT_ENABLED = settings.WGER_SETTINGS['HEALTH_CONNECT_ENABLED']
 
 
 class HealthConnectService:
+    _maximum_entries = 1000
     """
     Service class for importing health connect data
 
     This service handles:
     - Import of health connect data (steps, weight, calories, etc)
+    - _maximum_entries sets the limit on how much data can be imported per call.
     """
 
+    def __init__(self):
+        pass
+
     @classmethod
-    def import_weights(cls, user: User, incoming_weights: List, max_batch: int) -> List[WeightEntry]:
+    def import_health_connect_data(cls, user: User, data: List):
+        """
+        Import all health connect data for the user
+
+        Splits incoming data into weight, energy burned, and steps, 
+        Calls the relevant functions to add the seperated data into the database
+
+        Args:
+            user: The user to import the weight entry for
+            data: The incoming health connect data
+                Expected structure:
+                {
+                    "weights": [
+                        {
+                            "date": ISO8601 datetime,
+                            "value": float,
+                            "source": string
+                        }
+                    ],
+                    "energy_burned": [
+                        {
+                            "date": ISO8601 datetime,
+                            "value": float,
+                            "source": string
+                        }
+                    ],
+                    "steps": [
+                        {
+                            "date": ISO8601 datetime,
+                            "value": int,
+                            "source": string
+                        }
+                    ]
+                }
+        Returns:
+            -
+        """
+
+        if (cls._maximum_entries < len(data)
+                or not HEALTH_CONNECT_ENABLED):
+            return
+
+        cls._set_health_connect_source(user)
+
+        weight_data = data.get("weights", [])
+        cls._import_weights(user, weight_data, 50)
+
+        energy_burned_data = data.get("energy_burned", [])
+        cls._import_energy_burned(user, energy_burned_data, 50)
+
+        steps_data = data.get("steps", [])
+        cls._import_steps_walked(user, steps_data, 50)
+
+        # Update last health connect sync time for user
+        cls.user_health_connect_source.last_sync_time = max([
+            max(entry.date for entry in weight_data),
+            max(entry.date for entry in energy_burned_data),
+            max(entry.date for entry in steps_data)
+        ])
+
+        UserIntegrationSource.update(
+            cls.user_health_connect_source
+        )
+
+    @classmethod
+    def _import_weights(cls, user: User, incoming_weights: List, max_batch: int) -> List[WeightEntry]:
         """
         Import weight entries for the user
 
@@ -67,7 +140,7 @@ class HealthConnectService:
             max_batch: maximum entries to save to the database per call
 
         Returns:
-            List of imported weight entries
+            -
         """
         if cls.should_skip_user(user):
             return []
@@ -88,6 +161,10 @@ class HealthConnectService:
             if existing_w and not existing_w.bImported:
                 continue
 
+            # Ignore objects from sources with a higher priority
+            if existing_w.source.priority < cls._get_health_connect_source_priority():
+                continue
+
             to_create_or_update.append(
                 WeightEntry(
                     user=user,
@@ -105,3 +182,162 @@ class HealthConnectService:
                 unique_fields=["user","date"]
             )
 
+    @classmethod
+    def _import_energy_burned(cls, user: User, incoming_energy_burned: List, max_batch: int) -> List[EnergyBurnedEntry]:
+        """
+        Import energy burned entries for the user, in kcal
+
+        Imports a single energy burned entry per day.
+        Only overwrites previously imported entries.
+        Manual energy burned entries always take priority 
+        Assigns 'bImported' flag in energy burned model:
+        True - Imported entry, False - Manual entry.
+
+        Args:
+            user: The user to import the weight entry for
+            date: The date of the weight entry
+            incoming_energy_burned: list of dictionary entries with keys "date", "value"
+                "date": date of weight entry (year, month, day)
+                "value": value of energy burned entry (kcal)
+            max_batch: maximum entries to save to the database per call
+
+        Returns:
+            -
+        """
+        if cls.should_skip_user(user):
+            return []
+
+        dates = [w["date"] for w in incoming_energy_burned]
+
+        existing_weights = WeightEntry.objects.filter(user=user, date__in=dates)
+
+        existing_dates = {date(w.date.year, w.date.month, w.date.day): w for w in existing_weights}
+
+        to_create_or_update = []
+
+        for incoming_e_b in incoming_energy_burned:
+
+            existing_e_b = existing_dates.get(incoming_e_b["date"])
+
+            # Ignore any days with manual entries
+            if existing_e_b and not existing_e_b.bImported:
+                continue
+
+            # Ignore objects from sources with a higher priority
+            if existing_e_b.source.priority < cls._get_health_connect_source_priority():
+                continue
+
+            to_create_or_update.append(
+                EnergyBurnedEntry(
+                    user=user,
+                    date=incoming_e_b["date"],
+                    energy_burned=incoming_e_b["value"] * cls.health_connect_source.energy_burned_import_multiplier,
+                    bImported=True
+                )
+            )
+
+        if len(to_create_or_update) > 0:
+            WeightEntry.objects.bulk_update(
+                to_create_or_update,
+                update_conflicts=True,
+                update_fields=["weight"],
+                unique_fields=["user","date"]
+            )
+
+    @classmethod
+    def _import_steps_walked(cls, user: User, incoming_steps_walked: List, max_batch: int) -> List[StepsEntry]:
+        """
+        Import steps walked entries for the user
+
+        Imports a single steps entry per day.
+        Only overwrites previously imported entries.
+        Manual steps entries always take priority 
+        Assigns 'bImported' flag in step model:
+        True - Imported entry, False - Manual entry.
+
+        Args:
+            user: The user to import the steps entry for
+            date: The date of the steps entry
+            incoming_steps_walked: list of dictionary entries with keys "date", "value"
+                "date": date of steps walked entry (year, month, day)
+                "value": value of steps entry
+            max_batch: maximum entries to save to the database per call
+
+        Returns:
+            -
+        """
+        if cls.should_skip_user(user):
+            return []
+
+        dates = [w["date"] for w in incoming_steps_walked]
+
+        existing_weights = WeightEntry.objects.filter(user=user, date__in=dates)
+
+        existing_dates = {date(w.date.year, w.date.month, w.date.day): w for w in existing_weights}
+
+        to_create_or_update = []
+
+        for incoming_s_w in incoming_steps_walked:
+
+            existing_s_w = existing_dates.get(incoming_s_w["date"])
+
+            # Ignore any days with manual entries
+            if existing_s_w and not existing_s_w.bImported:
+                continue
+
+            # Ignore objects from sources with a higher priority
+            if existing_s_w.source.priority < cls._get_health_connect_source_priority():
+                continue
+
+            to_create_or_update.append(
+                StepsEntry(
+                    user=user,
+                    date=incoming_s_w["date"],
+                    steps=incoming_s_w["value"],
+                    bImported=True
+                )
+            )
+
+        if len(to_create_or_update) > 0:
+            StepsEntry.objects.bulk_update(
+                to_create_or_update,
+                update_conflicts=True,
+                update_fields=["steps"],
+                unique_fields=["user","date"]
+            )
+
+    def _set_health_connect_source(cls, user):
+        health_connect_source = IntegrationSource.objects.filter(name='health_connect')
+
+        cls.health_connect_source = health_connect_source
+
+        user_health_connect_source = UserIntegrationSource.objects.get_or_create(
+            user=user,
+            source=health_connect_source
+        )
+
+        cls.user_health_connect_source = user_health_connect_source
+
+    def get_health_connect_source(cls, user):
+        health_connect_source = IntegrationSource.objects.filter(name='health_connect')
+
+        user_health_connect_source = UserIntegrationSource.objects.get_or_create(
+            user=user,
+            source=health_connect_source
+        )
+
+        return user_health_connect_source
+
+    def _get_health_connect_source_priority(cls):
+        return (
+            cls.user_health_connect_source.priority
+            if cls.user_health_connect_source.priority is not None
+            else cls.health_connect_source.priority
+        )
+
+    def _get_health_connect_source_energy_burned_import_multiplier(cls):
+        return (
+            cls.user_health_connect_source.energy_burned_import_multiplier
+            if cls.user_health_connect_source.energy_burned_import_multiplier is not None
+            else cls.health_connect_source.energy_burned_import_multiplier
+        )

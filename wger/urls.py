@@ -52,6 +52,7 @@ from wger.trophies.api import views as trophies_api_views
 from wger.utils.generic_views import TextTemplateView
 from wger.weight.api import views as weight_api_views
 from wger.activity.api import views as activity_api_views
+from wger.thirdparty_integrations.api import views as thirdparty_integrations_api_views
 
 
 #
@@ -247,7 +248,11 @@ router.register(r'ingredient-image', nutrition_api_views.ImageViewSet, basename=
 router.register(r'weightentry', weight_api_views.WeightEntryViewSet, basename='weightentry')
 
 # Activity app
-router.register(r'activityentry', activity_api_views.ActivityEntryViewSet, basename='activityentry')
+router.register(r'energy-burned-entry', activity_api_views.EnergyBurnedEntryViewSet, basename='energyburnedentry')
+router.register(r'steps-entry', activity_api_views.StepsEntryViewSet, basename='stepsentry')
+
+# Thirdparty_Integrations app
+router.register(r'thirdparty-integration', thirdparty_integrations_api_views.UserIntegrationSourceViewSet, basename='integrationsource')
 
 # Gallery app
 router.register(r'gallery', gallery_api_views.GalleryImageViewSet, basename='gallery')
@@ -289,6 +294,7 @@ urlpatterns = i18n_patterns(
     path('exercise/', include(('wger.exercises.urls', 'exercise'), namespace='exercise')),
     path('weight/', include(('wger.weight.urls', 'weight'), namespace='weight')),
     path('activity/', include(('wger.activity.urls', 'activity'), namespace='activity')),
+    path('thirdparty_integrations/', include(('wger.thirdparty_integrations.urls', 'thirdparty_integrations'), namespace='thirdparty_integrations')),
     path('nutrition/', include(('wger.nutrition.urls', 'nutrition'), namespace='nutrition')),
     path('software/', include(('wger.software.urls', 'software'), namespace='software')),
     path('config/', include(('wger.config.urls', 'config'), namespace='config')),

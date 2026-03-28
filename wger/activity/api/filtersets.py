@@ -17,14 +17,24 @@
 from django_filters import rest_framework as filters
 
 # wger
-from wger.activity.models import ActivityEntry
+from wger.activity.models import EnergyBurnedEntry
+from wger.activity.models import StepsEntry
 
 
-class ActivityEntryFilterSet(filters.FilterSet):
+class EnergyBurnedEntryFilterSet(filters.FilterSet):
     class Meta:
-        model = ActivityEntry
+        model = EnergyBurnedEntry
         fields = {
             'id': ['exact', 'in'],
-            'activity': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'energy_burned': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'date': ['exact', 'gt', 'gte', 'lt', 'lte'],
+        }
+
+class StepsEntryFilterSet(filters.FilterSet):
+    class Meta:
+        model = StepsEntry
+        fields = {
+            'id': ['exact', 'in'],
+            'steps': ['exact', 'gt', 'gte', 'lt', 'lte'],
             'date': ['exact', 'gt', 'gte', 'lt', 'lte'],
         }

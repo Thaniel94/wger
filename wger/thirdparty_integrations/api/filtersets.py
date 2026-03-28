@@ -17,14 +17,22 @@
 from django_filters import rest_framework as filters
 
 # wger
-from wger.thirdparty_integrations.health_connect.models import ImportEntry
+from wger.thirdparty_integrations.models import IntegrationSource, UserIntegrationSource
 
-
-class WeightEntryFilterSet(filters.FilterSet):
+class IntegrationSourceFilterSet(filters.FilterSet):
     class Meta:
-        model = WeightEntry
+        model = IntegrationSource
         fields = {
             'id': ['exact', 'in'],
-            'weight': ['exact', 'gt', 'gte', 'lt', 'lte'],
-            'date': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'display_name': ['exact', 'in'],
+            'priority': ['exact', 'gt', 'gte', 'lt', 'lte'],
+        }
+
+class UserIntegrationSourceFilterSet(filters.FilterSet):
+    class Meta:
+        model = UserIntegrationSource
+        fields = {
+            'id': ['exact', 'in'],
+            'priority': ['exact', 'gt', 'gte', 'lt', 'lte'],
+            'last_sync_time': ['exact', 'gt', 'gte', 'lt', 'lte'],
         }

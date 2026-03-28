@@ -27,11 +27,6 @@ from wger.core.views.react import ReactView
 from wger.thirdparty_integrations import views
 
 urlpatterns = [
-    path(
-        'export-csv/',
-        views.export_csv,
-        name='export-csv',
-    ),
     re_path(
         'overview',
         ReactView.as_view(login_required=True),

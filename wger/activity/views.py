@@ -32,7 +32,7 @@ from formtools.preview import FormPreview
 
 # wger
 from wger.activity import helpers
-from wger.activity.models import ActivityEntry
+from wger.activity.models import EnergyBurnedEntry
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def export_csv(request):
     # Convert all activity data to CSV
     writer = csv.writer(response)
 
-    activitys = ActivityEntry.objects.filter(user=request.user)
+    activitys = EnergyBurnedEntry.objects.filter(user=request.user)
     writer.writerow([_('Date'), _('Activity')])
 
     for entry in activitys:
@@ -85,5 +85,5 @@ class ActivityCsvImportFormPreview(FormPreview):
 
     def done(self, request, cleaned_data):
         activity_list, error_list = helpers.parse_activity_csv(request, cleaned_data)
-        ActivityEntry.objects.bulk_create(activity_list)
+        EnergyBurnedEntry.objects.bulk_create(activity_list)
         return HttpResponseRedirect(reverse('activity:overview'))

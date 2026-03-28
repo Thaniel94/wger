@@ -19,21 +19,24 @@
 from rest_framework import viewsets
 
 # wger
-from wger.activity.api.filtersets import ActivityEntryFilterSet
-from wger.activity.api.serializers import ActivityEntrySerializer
-from wger.activity.models import ActivityEntry
+from wger.activity.api.filtersets import EnergyBurnedEntryFilterSet
+from wger.activity.api.serializers import EnergyBurnedEntrySerializer
+from wger.activity.models import EnergyBurnedEntry
 
+from wger.activity.api.filtersets import StepsEntryFilterSet
+from wger.activity.api.serializers import StepsEntrySerializer
+from wger.activity.models import StepsEntry
 
-class ActivityEntryViewSet(viewsets.ModelViewSet):
+class EnergyBurnedEntryViewSet(viewsets.ModelViewSet):
     """
     API endpoint for nutrition plan objects
     """
 
-    serializer_class = ActivityEntrySerializer
+    serializer_class = EnergyBurnedEntrySerializer
 
     is_private = True
     ordering_fields = '__all__'
-    filterset_class = ActivityEntryFilterSet
+    filterset_class = EnergyBurnedEntryFilterSet
 
     def get_queryset(self):
         """
@@ -41,9 +44,36 @@ class ActivityEntryViewSet(viewsets.ModelViewSet):
         """
         # REST API generation
         if getattr(self, 'swagger_fake_view', False):
-            return ActivityEntry.objects.none()
+            return EnergyBurnedEntry.objects.none()
 
-        return ActivityEntry.objects.filter(user=self.request.user)
+        return EnergyBurnedEntry.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        """
+        Set the owner
+        """
+        serializer.save(user=self.request.user)
+
+class StepsEntryViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for nutrition plan objects
+    """
+
+    serializer_class = StepsEntrySerializer
+
+    is_private = True
+    ordering_fields = '__all__'
+    filterset_class = StepsEntryFilterSet
+
+    def get_queryset(self):
+        """
+        Only allow access to appropriate objects
+        """
+        # REST API generation
+        if getattr(self, 'swagger_fake_view', False):
+            return StepsEntry.objects.none()
+
+        return StepsEntry.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         """

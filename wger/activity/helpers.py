@@ -22,13 +22,13 @@ import io
 import logging
 
 # wger
-from wger.activity.models import ActivityEntry
+from wger.activity.models import EnergyBurnedEntry
 
 
 logger = logging.getLogger(__name__)
 
 
-def parse_activity_csv(request, cleaned_data):
+def parse_energy_burned_csv(request, cleaned_data):
     try:
         dialect = csv.Sniffer().sniff(cleaned_data['csv_input'])
     except csv.Error:
@@ -48,7 +48,7 @@ def parse_activity_csv(request, cleaned_data):
         try:
             parsed_date = datetime.datetime.strptime(row[0], cleaned_data['date_format'])
             parsed_activity = decimal.Decimal(row[1].replace(',', '.'))
-            duplicate_date_in_db = ActivityEntry.objects.filter(
+            duplicate_date_in_db = EnergyBurnedEntry.objects.filter(
                 date=parsed_date, user=request.user
             ).exists()
             # within the list there are no duplicate dates
@@ -71,6 +71,6 @@ def parse_activity_csv(request, cleaned_data):
 
     # Create the valid activity entries
     for date, activity in distinct_activity_entries:
-        activity_list.append(ActivityEntry(date=date, activity=activity, user=request.user))
+        activity_list.append(EnergyBurnedEntry(date=date, activity=activity, user=request.user))
 
     return activity_list, error_list

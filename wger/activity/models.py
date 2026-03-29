@@ -36,10 +36,8 @@ class EnergyBurnedEntry(models.Model):
 
     date = models.DateField(verbose_name='Date')
 
-    energy_burned = models.DecimalField(
+    energy_burned = models.IntegerField(
         verbose_name='Energy burned',
-        max_digits=5,
-        decimal_places=2,
         validators=[MinValueValidator(Decimal(500)), MaxValueValidator(Decimal(15000))],
     )
 
@@ -75,7 +73,8 @@ class EnergyBurnedEntry(models.Model):
         """
         Metaclass to set some other properties
         """
-
+        unique_together = ("user", "date")
+        
         verbose_name = 'Energy burned entry'
         ordering = [
             'date',
@@ -121,11 +120,31 @@ class StepsEntry(models.Model):
     value from the form is ignored and the request's user always used.
     """
 
+    imported = models.BooleanField(
+        verbose_name='bImported',
+        default=False,
+        null=False
+    )
+    
+    source = models.ForeignKey(
+        IntegrationSource,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
+    user = models.ForeignKey(
+        User,
+        verbose_name='User',
+        on_delete=models.CASCADE,
+    )
+
     class Meta:
         """
         Metaclass to set some other properties
         """
-
+        unique_together = ("user", "date")
+        
         verbose_name = 'Steps entry'
         ordering = [
             'date',

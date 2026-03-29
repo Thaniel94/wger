@@ -110,7 +110,8 @@ class UserIntegrationSource(models.Model):
     Multiplier to increase/decrease imported energy burn values to account for consistent under/over estimates
     """
 
-    last_sync_time = models.DateTimeField(verbose_name='Last sync time')
+    last_sync_time = models.DateTimeField(null=True,
+        verbose_name='Last sync time')
 
     class Meta:
         """

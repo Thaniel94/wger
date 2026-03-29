@@ -73,7 +73,8 @@ class WeightEntry(models.Model):
         """
         Metaclass to set some other properties
         """
-
+        unique_together = ("user", "date")
+        
         verbose_name = 'Weight entry'
         ordering = [
             'date',
